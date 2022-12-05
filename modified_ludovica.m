@@ -115,62 +115,34 @@ for i = 1:20
 end
 title('diff gamma = 4')
 
-%% binarizing
-Th = graythresh(diff_cropped); 
-Im_BW = imbinarize(diff_cropped,Th);
-
-figure 
-for i = 1:20
-    subplot(4, 5, i)
-    imshow(Im_BW(v2,v1,i), [])
-end
-
-%% morphological operation
+%% Diameter of the circle
 close all
-
-se = strel('disk',2);
-Clo = imclose(Im_BW,se);
-
-figure()
-for i = 1:20
-    subplot(4, 5, i)
-    imshow(Clo(v2,v1,i),[])
-end
-title('Closing')
-
-% se = strel('disk',1);
-% Ero = imerode(Im_BW,se);
-% 
-% figure()
-% for i = 1:20
-%     subplot(4, 5, i)
-%     imshow(Ero(v2,v1,i),[])
-% end
-% title('Dilation')
-
-% se = strel('disk',4);
-% Op=imclose(Dil,se);
-% 
-% figure()
-% for i = 1:20
-%     subplot(4, 5, i)
-%     imshow(Op(v2,v1,i),[])
-% end
-% title('Opening')
-
-%% Circle recognition
-imshow(diff_cropped(v2,v1,20))
+Image = im2double(diff_cropped);
+imshow(Image(v2,v1,20))
 d = drawline;
 pos = d.Position;
 diffPos = diff(pos);
 diameter = hypot(diffPos(1),diffPos(2));
 
-%%
+%% Circle recognition
 close all
 
-low = round(diameter/2) - 3;
-up = round(diameter/2) + 3;
-[centers,radii] = imfindcircles(diff_cropped(v2,v1,20),[low up],'Sensitivity',0.97);
+low = round(diameter/2) - 5;
+up = round(diameter/2) + 5;
+[centers,radii] = imfindcircles(Image(v2,v1,20),[low up],'Sensitivity',0.97);
 
-imshow(diff_cropped(v2,v1,20))
+imshow(Image(v2,v1,20))
 h = viscircles(centers,radii);
+
+%% Automatic circle recognition
+figure
+% center=zeros(20,2);
+% radius=zeros(20,2);
+for i = 1:20
+    subplot(4,5,i)
+    [centers,radii] = imfindcircles(Image(v2,v1,i),[low up],'Sensitivity',0.97);
+%     center(i)=centers;
+%     radius(i)=radii;
+    imshow(Image(v2,v1,i))
+    h = viscircles(centers,radii);
+end

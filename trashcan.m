@@ -77,3 +77,27 @@ imshow(disk10)
 % Seg =  immultiply(Im_int, disk10);
 % figure
 % imshow(Seg);
+
+%% legal trick
+% J = uint8(cropped_Im);
+J=imadjust(cropped_Im,[0 0.01]);
+
+figure
+imshow(cropped_Im)
+figure
+imshow(J)
+I = insertShape(J,'filled-circle',[center(10,1) center(10,2) radius(10)],'color',[1 1 1],'opacity',1); 
+figure
+imshow(I)
+
+%% automatic legal trick
+
+figure
+for i=1:20
+    subplot(4,5,i)
+    J=imadjust(Im_int_cropped(v2,v1,i),[0 0.0001]);
+    I = insertShape(J,'filled-circle',[center(i,1) center(i,2) radius(i)],'color',[1 1 1],'opacity',1);
+    Seg = immultiply(Im_int_cropped(v2,v1,i),I(:,:,1));
+    imshow(Seg)
+end
+

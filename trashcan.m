@@ -65,3 +65,15 @@ title('Closing')
 %     imshow(Op(v2,v1,i),[])
 % end
 % title('Opening')
+
+%% Create the disk
+disk10 = circle(center(10,1),center(10,2),radius(10));
+
+disk10=uint8(disk10);
+
+figure
+imshow(disk10)
+
+% Seg =  immultiply(Im_int, disk10);
+% figure
+% imshow(Seg);

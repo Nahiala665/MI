@@ -101,7 +101,8 @@ for i = 1:20
 end
 
 %% difference
-close all
+close all 
+
 for i = 1:20
     diff_cropped(v2, v1, i) = cropped_Im_d(v2, v1, i) - cropped_Im_modified(v2, v1, i);
 end
@@ -132,17 +133,39 @@ up = round(diameter/2) + 5;
 [centers,radii] = imfindcircles(Image(v2,v1,20),[low up],'Sensitivity',0.97);
 
 imshow(Image(v2,v1,20))
-h = viscircles(centers,radii);
+h = viscircles(centers,radii,'LineStyle','--');
 
 %% Automatic circle recognition
 figure
-% center=zeros(20,2);
-% radius=zeros(20,2);
+center=zeros(20,2);
+radius=zeros(20,1);
 for i = 1:20
     subplot(4,5,i)
     [centers,radii] = imfindcircles(Image(v2,v1,i),[low up],'Sensitivity',0.97);
-%     center(i)=centers;
-%     radius(i)=radii;
+    center(i,:)=centers(1,:);
+    radius(i)=radii(1);
     imshow(Image(v2,v1,i))
-    h = viscircles(centers,radii);
+    h = viscircles(centers,radii,'LineStyle','--');
 end
+
+
+
+%% legal trick
+% J = uint8(cropped_Im);
+J=imadjust(cropped_Im,[0 0.01]);
+
+figure
+imshow(cropped_Im)
+figure
+imshow(J)
+I = insertShape(J,'filled-circle',[center(10,1) center(10,2) radius(10)],'color',[1 1 1],'opacity',1); 
+figure
+imshow(I)
+
+%% cropping
+Seg =  immultiply(cropped_Im, I(:,:,1));
+figure
+imshow(Seg)
+
+
+

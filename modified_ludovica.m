@@ -13,6 +13,7 @@ montage(Im, cmap) % to see all the slices --> 20 slices
 title('double-GrayScale')
 colorbar
 
+
 %% We consider mid_slice 10
 Im_d = Im(:,:,10);
 Im_int = uint8(Im_d); % one slice 
@@ -23,7 +24,6 @@ subplot(1, 2, 1), imshow(Im_d, [])
 subplot(1, 2, 2), imshow(Im_int, []) %brighter
 
 Im_bin = imbinarize(Im_d, 128);
-
 
 %% cropping one slice 
 % we should crop from the slice where the LV is the biggest
@@ -121,8 +121,8 @@ title('diff gamma = 4')
 close all
 Image = im2double(diff_cropped);
 imshow(Image(v2,v1,20))
-d = drawline;
-pos = d.Position;
+diam = drawline;
+pos = diam.Position;
 diffPos = diff(pos);
 diameter = hypot(diffPos(1),diffPos(2));
 
@@ -172,6 +172,56 @@ for i=1:20
     imshow(Seg)
 end
 
+%% creating the disk for all
+BG=size(Im_int);
+LV = zeros(256,256,3,20);
+figure
+for i=1:20
+    subplot(4,5,i)
+    whiteImage = 255 * ones(BG(1), BG(2), 'uint8');
+    center1 = center(i,1)+d(1);
+    center2 = center(i,2)+d(2);
+    J = insertShape(whiteImage,'filled-circle',[center1 center2 radius(i)],'color',[1 1 1],'opacity',1);
+    LV(:,:,:,i)=im2double(J);
+    imshow(J)
+end
 
+%% import the groundtruh for the slice 1
+GT1 = imread ('GT1.png');
+GT1=imbinarize(GT1(:,:,1));
 
+figure
+imshow(GT1)
+
+LV1 = LV(:,:,:, 1);
+LV1=imbinarize(LV1(:, :, 1));
+
+figure
+imshow(LV1);
+
+similarity = dice(LV1,GT1);
+figure
+imshowpair(LV1, GT1)
+title(['dice index : ' num2str(similarity)])
+
+%% for 5 slices
+GT=zeros(256,256,3,5);
+
+% extract the groundtruth
+for i=1:5
+    jpgFilename = sprintf('GT%d.png', i);
+    GT(:,:,:,i)=imread(jpgFilename);
+end
+
+% dice similarity
+figure
+for i=1:5
+    subplot(1,5,i)
+    LV_BW = LV(:,:,:, i);
+    LV_BW=imbinarize(LV_BW(:, :, 1));
+    GT_BW=imbinarize(GT(:,:,1,i));
+    similarity = dice(LV_BW,GT_BW);
+    imshowpair(LV_BW, GT_BW)
+    title(['dice index : ' num2str(similarity)])
+end
 

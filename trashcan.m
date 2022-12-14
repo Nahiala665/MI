@@ -101,3 +101,8 @@ for i=1:20
     imshow(Seg)
 end
 
+%% save image
+Im_d = Im(:,:,20);
+Im_int = uint8(Im_d);
+imwrite(Im_int, "im20.png")
+

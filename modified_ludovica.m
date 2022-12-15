@@ -50,28 +50,6 @@ for i = 1:20
     imshow(Im_int_cropped(v2,v1,i),[])
 end
 
-%% Resolution work
-close all
-
-FT = fft2(Im_int_cropped);
-
-IFT = ifft2(FT);
-
-
-figure 
-for i = 1:20
-    subplot(4, 5, i)
-    imshow(Im_int_cropped(v2,v1,i), [])
-end
-title('Original')
-
-figure 
-for i = 1:20
-    subplot(4, 5, i)
-    imshow(IFT(v2,v1,i), [])
-end
-title('Reconstructed')
-
 %% make it darker
 cropped_Im_d = im2double( Im_int_cropped );    
 
@@ -156,7 +134,7 @@ I = insertShape(whiteImage,'filled-circle',[center(10,1) center(10,2) radius(10)
 figure
 imshow(I)
 
-%% cropping
+%% Segmentation (on the cropped image
 Seg =  immultiply(cropped_Im, I(:,:,1));
 figure
 imshow(Seg)
@@ -172,7 +150,7 @@ for i=1:20
     imshow(Seg)
 end
 
-%% creating the disk for all
+%% creating the disk for all (uncropped image size)
 BG=size(Im_int);
 LV = zeros(256,256,3,20);
 figure
@@ -186,42 +164,57 @@ for i=1:20
     imshow(J)
 end
 
-%% import the groundtruh for the slice 1
-GT1 = imread ('GT1.png');
-GT1=imbinarize(GT1(:,:,1));
+%% Segmentation (uncropped image)
+figure
+segmentation=zeros(256,256,20);
+for i=1:20
+    subplot(4,5,i)
+    Full_im=im2double(Im_int_cropped(:,:,i));
+    Crop_circle = 1-LV(:,:,1,i);
+    Seg = immultiply(Full_im, Crop_circle);
+    segmentation(:,:,i)=Seg;
+    imshow(Seg)
+end
+
+%% video of the segmented ROI
+close all 
 
 figure
-imshow(GT1)
+for i = 1:20
+    imshow(segmentation(:,:,i))
+    hold on
+    pause
+end  
 
-LV1 = LV(:,:,:, 1);
-LV1=imbinarize(LV1(:, :, 1));
 
-figure
-imshow(LV1);
-
-similarity = dice(LV1,GT1);
-figure
-imshowpair(LV1, GT1)
-title(['dice index : ' num2str(similarity)])
-
-%% for 5 slices
+%% groundtrth
 GT=zeros(256,256,3,5);
 
 % extract the groundtruth
-for i=1:5
+for i=1:20
     jpgFilename = sprintf('GT%d.png', i);
     GT(:,:,:,i)=imread(jpgFilename);
 end
 
-% dice similarity
-figure
-for i=1:5
-    subplot(1,5,i)
+%% Evaluate Image Segmentation Score
+%Sensitivity (true positive rate) refers to the probability of a positive test, conditioned on truly being positive.
+% Specificity (true negative rate) refers to the probability of a negative test, conditioned on truly being negative.
+dice_index=zeros(1,20);
+sensitivity_index = zeros(1,20);
+specificity_index =zeros(1,20);
+
+for i=1:20
+    subplot(4,5,i)
     LV_BW = LV(:,:,:, i);
     LV_BW=imbinarize(LV_BW(:, :, 1));
     GT_BW=imbinarize(GT(:,:,1,i));
-    similarity = dice(LV_BW,GT_BW);
+    [sensitivity_index(1,i),specificity_index(1,i),dice_index(1,i)] = SegmentationPerformance(GT_BW,LV_BW);
     imshowpair(LV_BW, GT_BW)
-    title(['dice index : ' num2str(similarity)])
-end
+    sensitivity=round(sensitivity_index(1,i),3);
+    specificity = round(specificity_index(1,i),3);
+    similarity = round(dice_index(1,i),3);
+    title(['slice' num2str(i)])
+    txt = {['Dice : ' num2str(similarity)], ['TPR : ' num2str(sensitivity)],['TNR : ' num2str(specificity)]};
 
+    text(-10,230,txt,'FontSize',8)
+end

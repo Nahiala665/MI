@@ -106,3 +106,59 @@ Im_d = Im(:,:,20);
 Im_int = uint8(Im_d);
 imwrite(Im_int, "im20.png")
 
+%% import the groundtruh for the slice 1
+GT1 = imread ('GT1.png');
+GT1=imbinarize(GT1(:,:,1));
+
+figure
+imshow(GT1)
+
+LV1 = LV(:,:,:, 1);
+LV1=imbinarize(LV1(:, :, 1));
+
+figure
+imshow(LV1);
+
+similarity = dice(LV1,GT1);
+figure
+imshowpair(LV1, GT1)
+title(['dice index : ' num2str(similarity)])
+
+%% Resolution work
+close all
+
+FT = fft2(Im_int_cropped);
+
+IFT = ifft2(FT);
+
+
+figure 
+for i = 1:20
+    subplot(4, 5, i)
+    imshow(Im_int_cropped(v2,v1,i), [])
+end
+title('Original')
+
+figure 
+for i = 1:20
+    subplot(4, 5, i)
+    imshow(IFT(v2,v1,i), [])
+end
+title('Reconstructed')
+
+
+%% dice similarity
+dice_index=zeros(1,20);
+figure
+for i=1:20
+    subplot(4,5,i)
+    LV_BW = LV(:,:,:, i);
+    LV_BW=imbinarize(LV_BW(:, :, 1));
+    GT_BW=imbinarize(GT(:,:,1,i));
+    similarity = dice(GT_BW,LV_BW);
+    dice_index(1,i)=similarity;
+    imshowpair(LV_BW, GT_BW)
+    title(['dice index : ' num2str(similarity)])
+end
+
+mean_dice=mean(dice_index);

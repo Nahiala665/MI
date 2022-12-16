@@ -79,7 +79,7 @@ radius=zeros(20,1);
 figure
 for i = 1:20
     subplot(4,5,i)
-    [centers,radii] = imfindcircles(Im_double(v2,v1,i),[low up],'Sensitivity',0.96); %explain in the paper
+    [centers,radii] = imfindcircles(Im_double(v2,v1,i),[low up],'Sensitivity',0.95); %explain in the paper
     center(i,:)=centers(1,:);
     radius(i)=radii(1);
     imshow(Im_double(v2,v1,i),[])
@@ -132,7 +132,7 @@ end
 %% groundtruth
 % We now load the groundtruth given in our dataset
 
-Im2 = Images.gsmask; % matrix of interest, this is a double
+Im2 = Images.gsmask; 
 
 % double Gray scale
 figure
@@ -209,9 +209,10 @@ title('Segmentation evaluation over time frames')
 
 
 %% Quantification of the cross-sectional volume of the left ventricle
-% With our segmentation methods
+
 Volume = zeros(20,2);
 
+% With our segmentation methods
 for i=1:20
     LV_BW = LV(:,:,:, i);
     LV_BW=imbinarize(LV_BW(:, :, 1));
@@ -247,6 +248,5 @@ for i = 1:20
     pause
 end  
 
-%% 
 
 

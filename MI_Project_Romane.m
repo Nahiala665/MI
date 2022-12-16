@@ -79,7 +79,7 @@ radius=zeros(20,1);
 figure
 for i = 1:20
     subplot(4,5,i)
-    [centers,radii] = imfindcircles(Im_double(v2,v1,i),[low up],'Sensitivity',0.96);
+    [centers,radii] = imfindcircles(Im_double(v2,v1,i),[low up],'Sensitivity',0.96); %explain in the paper
     center(i,:)=centers(1,:);
     radius(i)=radii(1);
     imshow(Im_double(v2,v1,i),[])
@@ -198,6 +198,7 @@ mean_specificity=round(mean(specificity_index),3);
 figure
 plot(dice_index(1,:))
 ylim([0 1])
+grid on
 hold on
 plot(sensitivity_index(1,:),'Color','red')
 plot(specificity_index(1,:),'Color','blue')
@@ -205,6 +206,7 @@ legend('similarity', 'sensitivity','specificity')
 title('Segmentation evaluation over time frames')
     txt = {['Dice mean: ' num2str(mean_dice)], ['TPR mean : ' num2str(mean_sensitivity)],['TNR mean : ' num2str(mean_specificity)]};
     text(2,0.2,txt,'FontSize',10,'Color','black')
+
 
 %% Quantification of the cross-sectional volume of the left ventricle
 % With our segmentation methods

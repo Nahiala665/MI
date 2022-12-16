@@ -11,9 +11,11 @@ function [Sensitivity, Specificity, Similarity] = SegmentationPerformance(A,B)
     FP = length(find(substractindex == -1));
     %False Negative
     FN = length(find(substractindex == 1));
+
     % Evaluation of the segmentation
     Sensitivity = TP/(TP+FN);
     Specificity = TN/(TN+FP);
     Similarity = dice(A,B);
+
 end
    

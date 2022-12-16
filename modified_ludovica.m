@@ -3,9 +3,9 @@ clc
 
 %%
 close all
-Image = load ('CMRIdata.mat'); % this is a struct
+Images = load ('CMRIdata.mat'); % this is a struct
 
-Im = Image.vol; % matrix of interest, this is a double
+Im = Images.vol; % matrix of interest, this is a double
 
 % double Gray scale
 cmap = colormap('gray');
@@ -14,21 +14,13 @@ title('double-GrayScale')
 colorbar
 
 
-%% We consider mid_slice 10
-Im_d = Im(:,:,10);
-Im_int = uint8(Im_d); % one slice 
-% we need to convert to uint8 to use the imcrop
-
-figure
-subplot(1, 2, 1), imshow(Im_d, [])
-subplot(1, 2, 2), imshow(Im_int, []) %brighter
-
-Im_bin = imbinarize(Im_d, 128);
-
-%% cropping one slice 
-% we should crop from the slice where the LV is the biggest
-[cropped_Im, d] = imcrop(Im_int);
+%% We consider mid_slice 2
 close all
+
+Im_d = Im(:,:,2);
+Im_int = uint8(Im_d); % one slice 
+
+[cropped_Im, d] = imcrop(Im_int);
 
 d = round(d); % we save the coords
 
@@ -42,12 +34,12 @@ subplot(1,2,2), imshow(cropped_Im), title('Cropped')
 v1 = d(1):d(1)+d(3);
 v2 = d(2):d(2)+d(4);
 
-Im_int_cropped = uint8(Im);
+% Im_int_cropped = uint8(Im);
 
 figure()
 for i = 1:20
     subplot(4, 5, i)
-    imshow(Im_int_cropped(v2,v1,i),[])
+    imshow(Im(v2,v1,i),[])
 end
 
 %% make it darker
@@ -104,15 +96,6 @@ pos = diam.Position;
 diffPos = diff(pos);
 diameter = hypot(diffPos(1),diffPos(2));
 
-%% Circle recognition for slide 10
-close all
-
-low = round(diameter/2) - 5;
-up = round(diameter/2) + 5;
-[centers,radii] = imfindcircles(Image(v2,v1,20),[low up],'Sensitivity',0.97);
-
-imshow(Image(v2,v1,20))
-h = viscircles(centers,radii,'LineStyle','--');
 
 %% Automatic circle recognition
 figure
@@ -127,28 +110,6 @@ for i = 1:20
     h = viscircles(centers,radii,'LineStyle','--');
 end
 
-%% creating the disk for sl0
-S=size(cropped_Im);
-whiteImage = 255 * ones(S(1), S(2), 'uint8');
-I = insertShape(whiteImage,'filled-circle',[center(10,1) center(10,2) radius(10)],'color',[1 1 1],'opacity',1); 
-figure
-imshow(I)
-
-%% Segmentation (on the cropped image
-Seg =  immultiply(cropped_Im, I(:,:,1));
-figure
-imshow(Seg)
-
-%% automatic legal trick
-S=size(Im_int_cropped(v2,v1,1));
-figure
-for i=1:20
-    subplot(4,5,i)
-    whiteImage = 255 * ones(S(1), S(2), 'uint8');
-    I = insertShape(whiteImage,'filled-circle',[center(i,1) center(i,2) radius(i)],'color',[1 1 1],'opacity',1);
-    Seg = immultiply(Im_int_cropped(v2,v1,i),I(:,:,1));
-    imshow(Seg)
-end
 
 %% creating the disk for all (uncropped image size)
 BG=size(Im_int);
@@ -156,10 +117,10 @@ LV = zeros(256,256,3,20);
 figure
 for i=1:20
     subplot(4,5,i)
-    whiteImage = 255 * ones(BG(1), BG(2), 'uint8');
+    whiteImage = 0 * ones(BG(1), BG(2), 'uint8');
     center1 = center(i,1)+d(1);
     center2 = center(i,2)+d(2);
-    J = insertShape(whiteImage,'filled-circle',[center1 center2 radius(i)],'color',[1 1 1],'opacity',1);
+    J = insertShape(whiteImage,'filled-circle',[center1 center2 radius(i)],'color','white','opacity',1);
     LV(:,:,:,i)=im2double(J);
     imshow(J)
 end
@@ -170,7 +131,7 @@ segmentation=zeros(256,256,20);
 for i=1:20
     subplot(4,5,i)
     Full_im=im2double(Im_int_cropped(:,:,i));
-    Crop_circle = 1-LV(:,:,1,i);
+    Crop_circle = LV(:,:,1,i);
     Seg = immultiply(Full_im, Crop_circle);
     segmentation(:,:,i)=Seg;
     imshow(Seg)
@@ -186,15 +147,17 @@ for i = 1:20
     pause
 end  
 
+%% groundtruth
 
-%% groundtrth
-GT=zeros(256,256,3,5);
+Im2 = Images.gsmask; % matrix of interest, this is a double
 
-% extract the groundtruth
-for i=1:20
-    jpgFilename = sprintf('GT%d.png', i);
-    GT(:,:,:,i)=imread(jpgFilename);
+% double Gray scale
+figure
+for i = 1:20
+    subplot(4,5,i)
+    imshow(Im2(:,:,i));
 end
+
 
 %% Evaluate Image Segmentation Score
 %Sensitivity (true positive rate) refers to the probability of a positive test, conditioned on truly being positive.
@@ -207,7 +170,7 @@ for i=1:20
     subplot(4,5,i)
     LV_BW = LV(:,:,:, i);
     LV_BW=imbinarize(LV_BW(:, :, 1));
-    GT_BW=imbinarize(GT(:,:,1,i));
+    GT_BW=imbinarize(Im2(:,:,i));
     [sensitivity_index(1,i),specificity_index(1,i),dice_index(1,i)] = SegmentationPerformance(GT_BW,LV_BW);
     imshowpair(LV_BW, GT_BW)
     sensitivity=round(sensitivity_index(1,i),3);
@@ -216,5 +179,7 @@ for i=1:20
     title(['slice' num2str(i)])
     txt = {['Dice : ' num2str(similarity)], ['TPR : ' num2str(sensitivity)],['TNR : ' num2str(specificity)]};
 
-    text(-10,230,txt,'FontSize',8)
+    text(0,210,txt,'FontSize',8,'Color','white')
 end
+
+mean_dice=mean(dice_index);
